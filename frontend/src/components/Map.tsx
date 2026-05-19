@@ -21,10 +21,10 @@ export default function Map({ gpsData, detections, currentTimestamp }: MapProps)
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // Initialize map centered on GPS data or default to South Sulawesi
+    // Initialize map centered on GPS data or default to Makassar
     if (!map.current) {
-      const defaultCenter: L.LatLngExpression = [-4.566667, 119.416667];
-      const defaultZoom = 7;
+      const defaultCenter: L.LatLngExpression = [-5.147665, 119.432731];
+      const defaultZoom = 13;
       const center =
         gpsData.length > 0
           ? [gpsData[Math.floor(gpsData.length / 2)].lat, gpsData[Math.floor(gpsData.length / 2)].lon]

@@ -9,6 +9,7 @@ class Detection(BaseModel):
     lat: float
     lon: float
     snapshot: str
+    bbox: Optional[dict] = None
 
 class DetectionResult(BaseModel):
     job_id: str

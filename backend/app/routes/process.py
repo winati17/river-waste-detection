@@ -46,9 +46,9 @@ def process_video_task(job_id: str, video_path: str, srt_path: str, model_name: 
             raise ValueError("No GPS data found in SRT file")
         print(f"✅ GPS data parsed: {len(gps_data)} points, time range: {gps_data[0]['time']:.2f}s - {gps_data[-1]['time']:.2f}s")
         
-        # Process video (1 frame per second)
+        # Process video (All frames)
         video_processor = VideoProcessor(video_path, frame_skip=1)
-        video_processor.frame_skip = max(1, int(video_processor.fps))
+        video_processor.frame_skip = 1
         print(f"✅ Video opened: {video_processor.total_frames} frames, {video_processor.fps} fps")
         
         # Auto-detect GPS offset (for handling video start vs GPS start mismatch)
@@ -68,34 +68,47 @@ def process_video_task(job_id: str, video_path: str, srt_path: str, model_name: 
         fps = video_processor.fps
         width = int(video_processor.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(video_processor.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        out_video_filename = f"{job_id}_annotated.mp4"
+        out_video_filename = f"{job_id}_annotated.webm"
         out_video_path = os.path.join(UPLOAD_DIR, out_video_filename)
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        fourcc = cv2.VideoWriter_fourcc(*'vp80')
         out_video = cv2.VideoWriter(out_video_path, fourcc, fps, (width, height))
         
-        # Use full framerate for smooth video, but only run detection at frame_skip
-        video_processor.frame_skip = 1 
-        detect_interval = max(1, int(fps))
-        last_annotated_frame = None
+        detect_interval = max(1, int(fps / 5)) # Detect 5 times a second for smooth-ish video without being too slow
+        gallery_interval = max(1, int(fps))    # Save to gallery/map 1 time a second
+        
+        last_results = []
         
         for frame_number, timestamp, frame in video_processor.get_frames():
             frames_processed += 1
             
-            # Run detection every 1 second
+            # 1. Run detection every detect_interval (e.g., every 6 frames for 30fps)
             if frame_number % detect_interval == 0:
-                results, annotated = detector.detect(frame, confidence=confidence)
-                total_frame_detections += len(results)
-                last_annotated_frame = annotated
+                results, _ = detector.detect(frame, confidence=confidence)
+                last_results = results
+            
+            # Draw the last known bounding boxes on the CURRENT frame for smooth video
+            annotated = frame.copy()
+            if last_results:
+                for res in last_results:
+                    x1, y1, x2, y2 = int(res['bbox']['x1']), int(res['bbox']['y1']), int(res['bbox']['x2']), int(res['bbox']['y2'])
+                    cv2.rectangle(annotated, (x1, y1), (x2, y2), (0, 0, 255), 2)
+                    cv2.putText(annotated, f"{res['class_name']} {res['confidence']:.2f}", (x1, max(10, y1 - 5)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+            
+            # Write every frame to video so playback is 100% smooth
+            out_video.write(annotated)
+            
+            # 2. Save detections to gallery/map ONLY 1 time per second
+            if frame_number % gallery_interval == 0:
+                total_frame_detections += len(last_results)
                 
-                if frames_processed <= 2 or len(results) > 0:
-                    print(f"Frame {frame_number} (t={timestamp:.2f}s): {len(results)} detections", end="")
+                if frames_processed <= 2 or len(last_results) > 0:
+                    print(f"Frame {frame_number} (t={timestamp:.2f}s): {len(last_results)} detections added to gallery", end="")
                 
-                # Save detections with GPS data
                 saved_count = 0
-                for result in results:
+                for result in last_results:
                     gps = interpolate_gps(timestamp, gps_data, gps_offset)
                     if gps:
-                        # Save annotated snapshot instead of raw frame
+                        # Save annotated snapshot
                         snapshot_filename = video_processor.save_frame(annotated, output_dir)
                         
                         detection = Detection(
@@ -105,17 +118,14 @@ def process_video_task(job_id: str, video_path: str, srt_path: str, model_name: 
                             confidence=result['confidence'],
                             lat=gps['lat'],
                             lon=gps['lon'],
-                            snapshot=f"/outputs/{job_id}/{snapshot_filename}"
+                            snapshot=f"/outputs/{job_id}/{snapshot_filename}",
+                            bbox=result['bbox']
                         )
                         detections.append(detection)
                         saved_count += 1
                 
-                if frames_processed <= 2 or len(results) > 0:
+                if frames_processed <= 2 or len(last_results) > 0:
                     print(f" → saved {saved_count}")
-            
-            # Write the frame (annotated if available, else original or keep annotated to show box for 1 second)
-            # Keeping the box visible for 1 second is better to see what was detected!
-            out_video.write(last_annotated_frame if last_annotated_frame is not None else frame)
             
             # Periodically update progress in results_store
             if frames_processed % 10 == 0:
