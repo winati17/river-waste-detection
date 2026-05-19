@@ -24,4 +24,5 @@ export interface DetectionResult {
   avg_confidence?: number;
   error?: string;
   video_url?: string;
+  original_video_url?: string;
 }

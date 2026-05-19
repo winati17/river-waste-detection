@@ -41,3 +41,13 @@ export const clearDetections = async () => {
   const response = await api.delete(`/api/detections`);
   return response.data;
 };
+
+export const getJobHistory = async () => {
+  const response = await api.get(`/api/results`);
+  return response.data;
+};
+
+export const deleteJob = async (id: string) => {
+  const response = await api.delete(`/api/results/${id}`);
+  return response.data;
+};

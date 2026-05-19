@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import UploadForm from "../components/UploadForm";
+import HistoryList from "../components/HistoryList";
 
 export default function HomePage() {
   return (
@@ -55,6 +56,7 @@ export default function HomePage() {
                 Submit your MP4 river footage and GPS SRT file, then choose the model and confidence threshold.
               </p>
               <UploadForm />
+              <HistoryList />
             </div>
           </div>
         </section>

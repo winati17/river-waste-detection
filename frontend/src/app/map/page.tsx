@@ -22,7 +22,7 @@ export default function MapPage() {
 
   const detections: Detection[] = (data?.data || []).map((d: any) => ({
     frame: 0,
-    timestamp: 0,
+    timestamp: d.detected_at || 0,
     class_name: "Trash", 
     confidence: d.confidence || 0,
     lat: d.lat,

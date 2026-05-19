@@ -117,8 +117,8 @@ export default function ResultsPage() {
                 <span>{data.progress ?? 0}%</span>
               </div>
               <div className="w-full bg-yellow-200 rounded-full h-2.5">
-                <div 
-                  className="bg-yellow-500 h-2.5 rounded-full transition-all duration-500" 
+                <div
+                  className="bg-yellow-500 h-2.5 rounded-full transition-all duration-500"
                   style={{ width: `${data.progress ?? 0}%` }}
                 ></div>
               </div>
@@ -134,13 +134,12 @@ export default function ResultsPage() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 disabled={tab.disabled}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  activeTab === tab.id
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === tab.id
                     ? 'bg-blue-600 text-white'
                     : tab.disabled
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
               >
                 {tab.icon} {tab.label}
               </button>
@@ -214,13 +213,36 @@ export default function ResultsPage() {
             )}
 
             {/* Video Tab */}
-            {activeTab === 'video' && data.video_url && (
+            {activeTab === 'video' && (
               <div>
-                <h3 className="text-lg font-semibold mb-4">Video Playback</h3>
-                <VideoPlayer
-                  videoUrl={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${data.video_url}`}
-                  onTimeUpdate={(time) => setCurrentVideoTime(time)}
-                />
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4 text-slate-800">Original Drone Footage</h3>
+                    {data.original_video_url ? (
+                      <VideoPlayer
+                        videoUrl={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${data.original_video_url}`}
+                        onTimeUpdate={(time) => setCurrentVideoTime(time)}
+                      />
+                    ) : (
+                      <div className="aspect-video bg-slate-100 flex items-center justify-center text-slate-400 rounded-xl">
+                        Original video not available
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4 text-slate-800">AI Annotated Detections</h3>
+                    {data.video_url ? (
+                      <VideoPlayer
+                        videoUrl={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${data.video_url}`}
+                        onTimeUpdate={(time) => setCurrentVideoTime(time)}
+                      />
+                    ) : (
+                      <div className="aspect-video bg-slate-100 flex items-center justify-center text-slate-400 rounded-xl">
+                        Annotated video not available
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 

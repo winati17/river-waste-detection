@@ -162,7 +162,8 @@ def process_video_task(job_id: str, video_path: str, srt_path: str, model_name: 
             total_detections=len(detections),
             processing_time=processing_time,
             avg_confidence=avg_confidence,
-            video_url=f"/uploads/{out_video_filename}"
+            video_url=f"/uploads/{out_video_filename}",
+            original_video_url=f"/uploads/{job_id}_video.mp4"
         )
         results_store[job_id] = result
         
@@ -170,6 +171,29 @@ def process_video_task(job_id: str, video_path: str, srt_path: str, model_name: 
         results_file = os.path.join(output_dir, "results.json")
         with open(results_file, 'w') as f:
             json.dump(result.dict(), f, default=str)
+            
+        # Bulk insert to Supabase
+        SUPABASE_URL = os.getenv("SUPABASE_URL")
+        SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE")
+        if SUPABASE_URL and SUPABASE_KEY and len(detections) > 0:
+            try:
+                from supabase import create_client
+                import datetime
+                sb = create_client(SUPABASE_URL, SUPABASE_KEY)
+                records = []
+                for d in detections:
+                    records.append({
+                        "lat": d.lat,
+                        "lng": d.lon,
+                        "confidence": d.confidence,
+                        "image_url": d.snapshot,
+                        "detected_at": str(d.timestamp)
+                    })
+                # Supabase supports bulk insert
+                sb.table("detections").insert(records).execute()
+                print(f"✅ Saved {len(records)} records to Supabase")
+            except Exception as e:
+                print(f"⚠️ Failed to save to Supabase: {str(e)}")
         
     except Exception as e:
         import traceback
@@ -228,3 +252,16 @@ async def get_results(job_id: str):
     if job_id not in results_store:
         raise HTTPException(status_code=404, detail="Job not found")
     return results_store[job_id]
+
+@router.get("/api/results")
+async def list_results():
+    # Return all jobs sorted by newest first
+    # (Since dict is ordered by insertion in Python 3.7+, we can reverse it)
+    return {"jobs": list(results_store.values())[::-1]}
+
+@router.delete("/api/results/{job_id}")
+async def delete_result(job_id: str):
+    if job_id not in results_store:
+        raise HTTPException(status_code=404, detail="Job not found")
+    del results_store[job_id]
+    return {"status": "success"}
