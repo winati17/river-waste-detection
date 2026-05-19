@@ -27,7 +27,7 @@ export default function DetectionGallery({ detections }: GalleryProps) {
         <div className="bg-white rounded-lg shadow-md p-4">
           <div className="mb-4">
             <img
-              src={`${process.env.NEXT_PUBLIC_API_URL}${selected.snapshot}`}
+              src={selected.snapshot.startsWith('http') ? selected.snapshot : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${selected.snapshot}`}
               alt="Detection"
               className="w-full max-h-96 object-cover rounded"
             />
@@ -70,7 +70,7 @@ export default function DetectionGallery({ detections }: GalleryProps) {
               }`}
             >
               <img
-                src={`${process.env.NEXT_PUBLIC_API_URL}${detection.snapshot}`}
+                src={detection.snapshot.startsWith('http') ? detection.snapshot : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${detection.snapshot}`}
                 alt={`Detection ${idx}`}
                 className="w-full h-24 object-cover"
               />

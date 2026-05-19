@@ -67,7 +67,7 @@ export default function Map({ gpsData, detections, currentTimestamp }: MapProps)
               <p>Confidence: ${(detection.confidence * 100).toFixed(1)}%</p>
               <p>Frame: ${detection.frame}</p>
               <p>Location: ${detection.lat.toFixed(4)}, ${detection.lon.toFixed(4)}</p>
-              ${detection.snapshot ? `<img src="${process.env.NEXT_PUBLIC_API_URL}${detection.snapshot}" class="mt-2 max-w-xs" />` : ''}
+              ${detection.snapshot ? `<img src="${detection.snapshot.startsWith('http') ? detection.snapshot : process.env.NEXT_PUBLIC_API_URL + detection.snapshot}" class="mt-2 max-w-xs" />` : ''}
             </div>`,
             { maxWidth: 400 }
           )

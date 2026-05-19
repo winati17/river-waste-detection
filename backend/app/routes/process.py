@@ -45,8 +45,9 @@ def process_video_task(job_id: str, video_path: str, srt_path: str, model_name: 
             raise ValueError("No GPS data found in SRT file")
         print(f"✅ GPS data parsed: {len(gps_data)} points, time range: {gps_data[0]['time']:.2f}s - {gps_data[-1]['time']:.2f}s")
         
-        # Process video
-        video_processor = VideoProcessor(video_path, frame_skip=10)
+        # Process video (1 frame per second)
+        video_processor = VideoProcessor(video_path, frame_skip=1)
+        video_processor.frame_skip = max(1, int(video_processor.fps))
         print(f"✅ Video opened: {video_processor.total_frames} frames, {video_processor.fps} fps")
         
         # Auto-detect GPS offset (for handling video start vs GPS start mismatch)

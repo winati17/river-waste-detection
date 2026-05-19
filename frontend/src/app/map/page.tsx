@@ -2,35 +2,31 @@
 
 import Link from "next/link";
 import Map from "../../components/Map";
-
-const mockGps = [
-  { lat: -8.5069, lon: 115.2625, time: 0 },
-  { lat: -8.5075, lon: 115.263, time: 60 },
-  { lat: -8.5081, lon: 115.264, time: 120 },
-];
-
-const mockDetections = [
-  {
-    frame: 42,
-    timestamp: 12.4,
-    class_name: "Trash",
-    confidence: 0.86,
-    lat: -8.5072,
-    lon: 115.2628,
-    snapshot: "",
-  },
-  {
-    frame: 78,
-    timestamp: 34.7,
-    class_name: "Plastic",
-    confidence: 0.91,
-    lat: -8.5078,
-    lon: 115.2634,
-    snapshot: "",
-  },
-];
+import { useQuery } from "@tanstack/react-query";
+import { getAllDetections } from "../../services/api";
+import { Detection } from "../../types";
 
 export default function MapPage() {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['all-detections'],
+    queryFn: getAllDetections,
+  });
+
+  const detections: Detection[] = (data?.data || []).map((d: any) => ({
+    frame: 0,
+    timestamp: 0,
+    class_name: "Trash", 
+    confidence: d.confidence || 0,
+    lat: d.lat,
+    lon: d.lng,
+    snapshot: d.image_url || '',
+  }));
+
+  // Create a path from detections sorted by time
+  const gpsPath = [...detections]
+    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+    .map(d => ({ lat: d.lat, lon: d.lon, time: 0 }));
+
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
       <nav className="flex flex-col gap-4 px-8 py-6 sm:flex-row sm:items-center sm:justify-between bg-white/80 backdrop-blur-xl shadow-sm">
@@ -51,7 +47,13 @@ export default function MapPage() {
 
         <div className="rounded-3xl bg-white p-6 shadow-xl ring-1 ring-slate-200">
           <div className="h-[72vh] rounded-3xl overflow-hidden border border-slate-200">
-            <Map gpsData={mockGps} detections={mockDetections} />
+            {isLoading ? (
+              <div className="flex items-center justify-center h-full">Loading map data...</div>
+            ) : error ? (
+              <div className="flex items-center justify-center h-full text-red-500">Failed to load detections</div>
+            ) : (
+              <Map gpsData={gpsPath} detections={detections} />
+            )}
           </div>
         </div>
       </main>

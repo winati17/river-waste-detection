@@ -31,3 +31,8 @@ export const getResults = async (jobId: string): Promise<DetectionResult> => {
   const response = await api.get(`/api/results/${jobId}`);
   return response.data;
 };
+
+export const getAllDetections = async () => {
+  const response = await api.get(`/api/detections`);
+  return response.data;
+};

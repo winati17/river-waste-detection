@@ -1,4 +1,4 @@
-﻿from fastapi import FastAPI
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.routes.process import router as process_router
@@ -75,6 +75,11 @@ def receive_detection(data: Detection):
     }).execute()
 
     return {"status": "success"}
+
+@app.get("/api/detections")
+def get_all_detections():
+    response = supabase.table("detections").select("*").execute()
+    return {"data": response.data}
 
 @app.get("/api/health")
 async def health_check():
