@@ -58,21 +58,6 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-
-        <section className="mt-20 rounded-[2rem] bg-slate-900 px-10 py-14 text-white shadow-2xl shadow-slate-900/20">
-          <div className="grid gap-8 lg:grid-cols-3">
-            {[
-              { label: "10K+", desc: "Trash detections processed" },
-              { label: "25", desc: "Rivers monitored" },
-              { label: "92%", desc: "Detection accuracy" },
-            ].map((item) => (
-              <div key={item.label} className="rounded-3xl bg-slate-950/80 p-8">
-                <h3 className="text-4xl font-bold">{item.label}</h3>
-                <p className="mt-3 text-slate-300">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </section>
       </main>
 
       <footer className="border-t border-slate-200/70 bg-white/70 py-8 text-center text-sm text-slate-600">
