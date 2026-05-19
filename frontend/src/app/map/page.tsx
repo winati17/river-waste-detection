@@ -1,16 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import Map from "../../components/Map";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAllDetections, clearDetections } from "../../services/api";
 import { Detection } from "../../types";
+import dynamic from "next/dynamic";
+
+const Map = dynamic(() => import("../../components/Map"), { ssr: false });
 
 export default function MapPage() {
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useQuery({
     queryKey: ['all-detections'],
     queryFn: getAllDetections,
+    refetchInterval: 5000, // Poll database every 5 seconds to keep the map updated
   });
 
   const clearMutation = useMutation({

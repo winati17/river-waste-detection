@@ -5,9 +5,11 @@ import { useQuery } from '@tanstack/react-query';
 import { useState, useMemo } from 'react';
 import { getResults } from '../../../services/api';
 import { DetectionResult } from '../../../types';
-import Map from '../../../components/Map';
 import VideoPlayer from '../../../components/VideoPlayer';
 import DetectionGallery from '../../../components/DetectionGallery';
+import dynamic from 'next/dynamic';
+
+const Map = dynamic(() => import('../../../components/Map'), { ssr: false });
 
 export default function ResultsPage() {
   const { id } = useParams();
@@ -82,7 +84,7 @@ export default function ResultsPage() {
   const tabs = [
     { id: 'summary' as const, label: 'Summary', icon: '📊' },
     { id: 'map' as const, label: 'Map', icon: '🗺️' },
-    { id: 'video' as const, label: 'Video', icon: '📹', disabled: !data.video_url },
+    { id: 'video' as const, label: 'Video', icon: '📹'},
     { id: 'gallery' as const, label: 'Gallery', icon: '🖼️', disabled: !data.detections || data.detections.length === 0 },
   ];
 
@@ -231,9 +233,9 @@ export default function ResultsPage() {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold mb-4 text-slate-800">AI Annotated Detections</h3>
-                    {data.video_url ? (
+                    {data.annotated_video_url ? (
                       <VideoPlayer
-                        videoUrl={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${data.video_url}`}
+                        videoUrl={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${data.annotated_video_url}`}
                         onTimeUpdate={(time) => setCurrentVideoTime(time)}
                       />
                     ) : (

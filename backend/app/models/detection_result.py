@@ -20,5 +20,5 @@ class DetectionResult(BaseModel):
     processing_time: Optional[float] = None
     avg_confidence: Optional[float] = None
     error: Optional[str] = None
-    video_url: Optional[str] = None  # URL to access the video
+    annotated_video_url: Optional[str] = None  # URL to access the video
     original_video_url: Optional[str] = None

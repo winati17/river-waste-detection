@@ -24,8 +24,25 @@ OUTPUT_DIR = os.getenv("OUTPUT_DIR", "app/outputs")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-# In-memory storage for demo; use database in production
+# In-memory store for jobs
 results_store = {}
+
+# Load existing history from disk
+def load_history():
+    if os.path.exists(OUTPUT_DIR):
+        for item in os.listdir(OUTPUT_DIR):
+            job_path = os.path.join(OUTPUT_DIR, item)
+            results_file = os.path.join(job_path, "results.json")
+            if os.path.isdir(job_path) and os.path.exists(results_file):
+                try:
+                    with open(results_file, 'r') as f:
+                        data = json.load(f)
+                        # Reconstruct model from dict
+                        results_store[item] = DetectionResult(**data)
+                except Exception as e:
+                    print(f"Failed to load history for {item}: {e}")
+
+load_history()
 
 def process_video_task(job_id: str, video_path: str, srt_path: str, model_name: str, confidence: float):
     """Background task to process video."""
@@ -135,7 +152,8 @@ def process_video_task(job_id: str, video_path: str, srt_path: str, model_name: 
                     status="processing",
                     progress=progress_pct,
                     total_detections=len(detections),
-                    video_url=f"/uploads/{job_id}_video.mp4"
+                    detections=list(detections),
+                    original_video_url=f"/uploads/{job_id}_video.mp4"
                 )
             
         out_video.release()
@@ -162,7 +180,7 @@ def process_video_task(job_id: str, video_path: str, srt_path: str, model_name: 
             total_detections=len(detections),
             processing_time=processing_time,
             avg_confidence=avg_confidence,
-            video_url=f"/uploads/{out_video_filename}",
+            annotated_video_url=f"/uploads/{out_video_filename}",
             original_video_url=f"/uploads/{job_id}_video.mp4"
         )
         results_store[job_id] = result
@@ -182,12 +200,13 @@ def process_video_task(job_id: str, video_path: str, srt_path: str, model_name: 
                 sb = create_client(SUPABASE_URL, SUPABASE_KEY)
                 records = []
                 for d in detections:
+                    detected_at = datetime.datetime.fromtimestamp(d.timestamp, tz=datetime.timezone.utc)
                     records.append({
                         "lat": d.lat,
                         "lng": d.lon,
                         "confidence": d.confidence,
                         "image_url": d.snapshot,
-                        "detected_at": str(d.timestamp)
+                        "detected_at": detected_at.isoformat()
                     })
                 # Supabase supports bulk insert
                 sb.table("detections").insert(records).execute()
@@ -241,7 +260,7 @@ async def process_video(
     result = DetectionResult(
         job_id=job_id,
         status="pending",
-        video_url=f"/uploads/{job_id}_video.mp4"
+        annotated_video_url=f"/uploads/{job_id}_video.mp4"
     )
     results_store[job_id] = result
 
@@ -263,5 +282,39 @@ async def list_results():
 async def delete_result(job_id: str):
     if job_id not in results_store:
         raise HTTPException(status_code=404, detail="Job not found")
+    
+    # 1. Delete from memory
     del results_store[job_id]
+    
+    # 2. Delete files from disk
+    import shutil
+    job_output_dir = os.path.join(OUTPUT_DIR, job_id)
+    if os.path.exists(job_output_dir):
+        try:
+            shutil.rmtree(job_output_dir)
+        except Exception as e:
+            print(f"Error removing output dir {job_output_dir}: {e}")
+            
+    # Delete uploaded files
+    for ext in ["_video.mp4", "_gps.srt", "_annotated.webm"]:
+        file_path = os.path.join(UPLOAD_DIR, f"{job_id}{ext}")
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+            except Exception as e:
+                print(f"Error removing uploaded file {file_path}: {e}")
+                
+    # 3. Delete from Supabase
+    SUPABASE_URL = os.getenv("SUPABASE_URL")
+    SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE")
+    if SUPABASE_URL and SUPABASE_KEY:
+        try:
+            from supabase import create_client
+            sb = create_client(SUPABASE_URL, SUPABASE_KEY)
+            # Delete detections containing this job_id in their image_url path
+            sb.table("detections").delete().like("image_url", f"%/outputs/{job_id}/%").execute()
+            print(f"Deleted Supabase detections for job {job_id}")
+        except Exception as e:
+            print(f"Failed to delete detections from Supabase: {e}")
+            
     return {"status": "success"}

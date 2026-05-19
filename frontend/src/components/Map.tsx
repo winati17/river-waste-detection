@@ -38,14 +38,30 @@ export default function Map({ gpsData, detections, currentTimestamp }: MapProps)
       }).addTo(map.current);
     }
 
+    // Clear all markers and path if detections is empty (e.g. after Reset Map)
+    if (detections.length === 0) {
+      Object.values(markers.current).forEach((marker) => {
+        map.current?.removeLayer(marker);
+      });
+      markers.current = {};
+      if (pathPolyline.current) {
+        map.current?.removeLayer(pathPolyline.current);
+        pathPolyline.current = null;
+      }
+    }
+
     // Draw drone path
-    if (gpsData.length > 0 && !pathPolyline.current) {
+    if (gpsData.length > 0) {
       const path = gpsData.map((point) => [point.lat, point.lon] as L.LatLngExpression);
-      pathPolyline.current = L.polyline(path, {
-        color: '#3b82f6',
-        weight: 3,
-        opacity: 0.7,
-      }).addTo(map.current);
+      if (!pathPolyline.current) {
+        pathPolyline.current = L.polyline(path, {
+          color: '#3b82f6',
+          weight: 3,
+          opacity: 0.7,
+        }).addTo(map.current);
+      } else {
+        pathPolyline.current.setLatLngs(path);
+      }
     }
 
     // Add detection markers
@@ -67,7 +83,7 @@ export default function Map({ gpsData, detections, currentTimestamp }: MapProps)
               <p>Confidence: ${(detection.confidence * 100).toFixed(1)}%</p>
               <p>Frame: ${detection.frame}</p>
               <p>Location: ${detection.lat.toFixed(4)}, ${detection.lon.toFixed(4)}</p>
-              ${detection.snapshot ? `<img src="${detection.snapshot.startsWith('http') ? detection.snapshot : process.env.NEXT_PUBLIC_API_URL + detection.snapshot}" class="mt-2 max-w-xs" />` : ''}
+              ${detection.snapshot ? `<img src="${detection.snapshot.startsWith('http') ? detection.snapshot : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000') + detection.snapshot}" class="mt-2 max-w-xs" />` : ''}
             </div>`,
             { maxWidth: 400 }
           )

@@ -7,6 +7,7 @@ from supabase import create_client
 import os
 import base64
 import uuid
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -66,12 +67,21 @@ def receive_detection(data: Detection):
 
     image_url = f"{SUPABASE_URL}/storage/v1/object/public/{BUCKET_NAME}/{file_name}"
 
+    detected_at = data.timestamp
+    try:
+        if isinstance(detected_at, (int, float)):
+            detected_at = datetime.fromtimestamp(detected_at, tz=timezone.utc).isoformat()
+        else:
+            detected_at = datetime.fromtimestamp(float(detected_at), tz=timezone.utc).isoformat()
+    except Exception:
+        pass
+
     supabase.table("detections").insert({
         "lat": data.lat,
         "lng": data.lng,
         "confidence": data.confidence,
         "image_url": image_url,
-        "detected_at": data.timestamp
+        "detected_at": detected_at
     }).execute()
 
     return {"status": "success"}
@@ -83,8 +93,8 @@ def get_all_detections():
 
 @app.delete("/api/detections")
 def clear_detections():
-    # Supabase delete requires a filter
-    supabase.table("detections").delete().neq("id", -1).execute()
+    # Use confidence filter since id is UUID and -1 causes invalid UUID error
+    supabase.table("detections").delete().gte("confidence", 0).execute()
     return {"status": "success"}
 
 @app.get("/api/health")

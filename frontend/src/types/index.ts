@@ -23,6 +23,6 @@ export interface DetectionResult {
   processing_time?: number;
   avg_confidence?: number;
   error?: string;
-  video_url?: string;
+  annotated_video_url?: string;
   original_video_url?: string;
 }
