@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Detection } from '@/types';
+import { Detection } from '../types';
 
 interface GalleryProps {
   detections: Detection[];

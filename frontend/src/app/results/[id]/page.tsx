@@ -3,11 +3,11 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { useState, useMemo } from 'react';
-import { getResults } from '@/services/api';
-import { DetectionResult } from '@/types';
-import Map from '@/components/Map';
-import VideoPlayer from '@/components/VideoPlayer';
-import DetectionGallery from '@/components/DetectionGallery';
+import { getResults } from '../../../services/api';
+import { DetectionResult } from '../../../types';
+import Map from '../../../components/Map';
+import VideoPlayer from '../../../components/VideoPlayer';
+import DetectionGallery from '../../../components/DetectionGallery';
 
 export default function ResultsPage() {
   const { id } = useParams();

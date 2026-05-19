@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Detection } from '@/types';
+import { Detection } from '../types';
 
 interface MapProps {
   gpsData: Array<{ lat: number; lon: number; time: number }>;

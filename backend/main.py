@@ -1,4 +1,7 @@
-from fastapi import FastAPI
+﻿from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from app.routes.process import router as process_router
 from pydantic import BaseModel
 from supabase import create_client
 import os
@@ -8,7 +11,28 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-app = FastAPI()
+app = FastAPI(title="AI Drone Waste Detection API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(process_router)
+
+UPLOAD_DIR = os.getenv("UPLOAD_DIR", "app/uploads")
+OUTPUT_DIR = os.getenv("OUTPUT_DIR", "app/outputs")
+
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+os.makedirs("app/outputs", exist_ok=True)
+os.makedirs("app/uploads", exist_ok=True)
+
+app.mount("/outputs", StaticFiles(directory="app/outputs"), name="outputs")
+app.mount("/uploads", StaticFiles(directory="app/uploads"), name="uploads")
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE")
@@ -31,12 +55,9 @@ class Detection(BaseModel):
 
 @app.post("/api/detection")
 def receive_detection(data: Detection):
-
-    # Convert base64 → file
     image_bytes = base64.b64decode(data.image_base64)
     file_name = f"{uuid.uuid4()}.jpg"
 
-    # Upload ke Supabase Storage
     supabase.storage.from_(BUCKET_NAME).upload(
         file_name,
         image_bytes,
@@ -45,7 +66,6 @@ def receive_detection(data: Detection):
 
     image_url = f"{SUPABASE_URL}/storage/v1/object/public/{BUCKET_NAME}/{file_name}"
 
-    # Insert ke database
     supabase.table("detections").insert({
         "lat": data.lat,
         "lng": data.lng,
@@ -55,3 +75,7 @@ def receive_detection(data: Detection):
     }).execute()
 
     return {"status": "success"}
+
+@app.get("/api/health")
+async def health_check():
+    return {"status": "healthy", "message": "AI Drone Waste Detection API is running"}

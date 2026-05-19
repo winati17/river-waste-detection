@@ -1,92 +1,83 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { uploadFiles } from '@/services/api';
+import Link from "next/link";
+import UploadForm from "../components/UploadForm";
 
-export default function Home() {
-  const [video, setVideo] = useState<File | null>(null);
-  const [srt, setSrt] = useState<File | null>(null);
-  const [modelName, setModelName] = useState('yolov8n.pt');
-  const [confidence, setConfidence] = useState(0.3);
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!video || !srt) return;
-
-    setLoading(true);
-    try {
-      const result = await uploadFiles(video, srt, modelName, confidence);
-      router.push(`/results/${result.job_id}`);
-    } catch (error) {
-      console.error('Upload failed:', error);
-      alert('Upload failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
-        <h1 className="text-2xl font-bold text-center mb-8">AI Drone Waste Detection</h1>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Video File (.mp4)</label>
-            <input
-              type="file"
-              accept=".mp4"
-              onChange={(e) => setVideo(e.target.files?.[0] || null)}
-              className="mt-1 block w-full"
-              required
-            />
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 text-slate-900">
+      <nav className="flex flex-col gap-4 px-8 py-6 sm:flex-row sm:items-center sm:justify-between bg-white/90 backdrop-blur-xl shadow-sm">
+        <div className="text-2xl font-semibold">River Trash AI</div>
+        <div className="flex flex-wrap gap-3">
+          <Link href="/" className="rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Home</Link>
+          <Link href="/about" className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-100">About</Link>
+          <Link href="/map" className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-100">Map</Link>
+        </div>
+      </nav>
+
+      <main className="mx-auto max-w-7xl px-6 py-16">
+        <section className="grid gap-12 lg:grid-cols-[1.4fr_1fr] items-center">
+          <div className="space-y-8">
+            <div className="max-w-xl space-y-6">
+              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-600">River waste detection</p>
+              <h1 className="text-5xl font-bold tracking-tight text-slate-950 sm:text-6xl">
+                AI-powered detection for cleaner rivers
+              </h1>
+              <p className="text-lg leading-8 text-slate-700">
+                Upload river drone video and GPS telemetry to identify floating trash,
+                plot detection locations, and review the results with maps and video playback.
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Link href="/map" className="rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-900/10 hover:bg-slate-800">View Map</Link>
+                <Link href="/about" className="rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100">Learn More</Link>
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              {[
+                { title: "Autonomous Monitoring", text: "Capture river footage and GPS data with drone missions." },
+                { title: "AI Trash Detection", text: "Use advanced YOLO models to identify floating waste." },
+                { title: "Geospatial Insights", text: "Map detections with GPS coordinates for actionable analysis." },
+                { title: "Result Dashboard", text: "Review detection summaries, map data, and video playback." },
+              ].map((card) => (
+                <div key={card.title} className="rounded-3xl bg-white p-6 shadow-xl ring-1 ring-slate-200">
+                  <h2 className="text-xl font-semibold mb-2">{card.title}</h2>
+                  <p className="text-slate-600 leading-7">{card.text}</p>
+                </div>
+              ))}
+            </div>
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-gray-700">GPS SRT File</label>
-            <input
-              type="file"
-              accept=".srt"
-              onChange={(e) => setSrt(e.target.files?.[0] || null)}
-              className="mt-1 block w-full"
-              required
-            />
+            <div className="rounded-[2rem] bg-white/90 p-8 shadow-2xl shadow-slate-500/10 ring-1 ring-slate-200">
+              <h2 className="text-3xl font-semibold mb-4">Upload video & start detection</h2>
+              <p className="mb-6 text-slate-600">
+                Submit your MP4 river footage and GPS SRT file, then choose the model and confidence threshold.
+              </p>
+              <UploadForm />
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Model</label>
-            <select
-              value={modelName}
-              onChange={(e) => setModelName(e.target.value)}
-              className="mt-1 block w-full border-gray-300 rounded-md"
-            >
-              <option value="yolov8n.pt">YOLOv8 Nano</option>
-              <option value="yolo11n.pt">YOLO11 Nano</option>
-            </select>
+        </section>
+
+        <section className="mt-20 rounded-[2rem] bg-slate-900 px-10 py-14 text-white shadow-2xl shadow-slate-900/20">
+          <div className="grid gap-8 lg:grid-cols-3">
+            {[
+              { label: "10K+", desc: "Trash detections processed" },
+              { label: "25", desc: "Rivers monitored" },
+              { label: "92%", desc: "Detection accuracy" },
+            ].map((item) => (
+              <div key={item.label} className="rounded-3xl bg-slate-950/80 p-8">
+                <h3 className="text-4xl font-bold">{item.label}</h3>
+                <p className="mt-3 text-slate-300">{item.desc}</p>
+              </div>
+            ))}
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Confidence Threshold: {confidence}
-            </label>
-            <input
-              type="range"
-              min="0.1"
-              max="1.0"
-              step="0.1"
-              value={confidence}
-              onChange={(e) => setConfidence(parseFloat(e.target.value))}
-              className="mt-1 block w-full"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading || !video || !srt}
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50"
-          >
-            {loading ? 'Processing...' : 'Process Video'}
-          </button>
-        </form>
-      </div>
+        </section>
+      </main>
+
+      <footer className="border-t border-slate-200/70 bg-white/70 py-8 text-center text-sm text-slate-600">
+        © 2026 River Trash AI Monitoring System
+      </footer>
     </div>
   );
 }
