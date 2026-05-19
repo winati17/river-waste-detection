@@ -15,6 +15,7 @@ class DetectionResult(BaseModel):
     status: str  # pending, processing, completed, failed
     detections: Optional[List[Detection]] = None
     total_detections: Optional[int] = None
+    progress: Optional[int] = None
     processing_time: Optional[float] = None
     avg_confidence: Optional[float] = None
     error: Optional[str] = None

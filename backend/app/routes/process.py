@@ -10,6 +10,7 @@ import os
 import json
 import time
 import asyncio
+import cv2
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -63,38 +64,71 @@ def process_video_task(job_id: str, video_path: str, srt_path: str, model_name: 
         output_dir = os.path.join(OUTPUT_DIR, job_id)
         os.makedirs(output_dir, exist_ok=True)
         
+        # Setup video writer
+        fps = video_processor.fps
+        width = int(video_processor.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(video_processor.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        out_video_filename = f"{job_id}_annotated.mp4"
+        out_video_path = os.path.join(UPLOAD_DIR, out_video_filename)
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        out_video = cv2.VideoWriter(out_video_path, fourcc, fps, (width, height))
+        
+        # Use full framerate for smooth video, but only run detection at frame_skip
+        video_processor.frame_skip = 1 
+        detect_interval = max(1, int(fps))
+        last_annotated_frame = None
+        
         for frame_number, timestamp, frame in video_processor.get_frames():
             frames_processed += 1
-            # Run detection
-            results = detector.detect(frame, confidence=confidence)
-            total_frame_detections += len(results)
             
-            if frames_processed <= 2 or len(results) > 0:
-                print(f"Frame {frame_number} (t={timestamp:.2f}s): {len(results)} detections", end="")
+            # Run detection every 1 second
+            if frame_number % detect_interval == 0:
+                results, annotated = detector.detect(frame, confidence=confidence)
+                total_frame_detections += len(results)
+                last_annotated_frame = annotated
+                
+                if frames_processed <= 2 or len(results) > 0:
+                    print(f"Frame {frame_number} (t={timestamp:.2f}s): {len(results)} detections", end="")
+                
+                # Save detections with GPS data
+                saved_count = 0
+                for result in results:
+                    gps = interpolate_gps(timestamp, gps_data, gps_offset)
+                    if gps:
+                        # Save annotated snapshot instead of raw frame
+                        snapshot_filename = video_processor.save_frame(annotated, output_dir)
+                        
+                        detection = Detection(
+                            frame=frame_number,
+                            timestamp=timestamp,
+                            class_name=result['class_name'],
+                            confidence=result['confidence'],
+                            lat=gps['lat'],
+                            lon=gps['lon'],
+                            snapshot=f"/outputs/{job_id}/{snapshot_filename}"
+                        )
+                        detections.append(detection)
+                        saved_count += 1
+                
+                if frames_processed <= 2 or len(results) > 0:
+                    print(f" → saved {saved_count}")
             
-            # Save detections with GPS data
-            saved_count = 0
-            for result in results:
-                gps = interpolate_gps(timestamp, gps_data, gps_offset)
-                if gps:
-                    # Save snapshot
-                    snapshot_filename = video_processor.save_frame(frame, output_dir)
-                    
-                    detection = Detection(
-                        frame=frame_number,
-                        timestamp=timestamp,
-                        class_name=result['class_name'],
-                        confidence=result['confidence'],
-                        lat=gps['lat'],
-                        lon=gps['lon'],
-                        snapshot=f"/outputs/{job_id}/{snapshot_filename}"
-                    )
-                    detections.append(detection)
-                    saved_count += 1
+            # Write the frame (annotated if available, else original or keep annotated to show box for 1 second)
+            # Keeping the box visible for 1 second is better to see what was detected!
+            out_video.write(last_annotated_frame if last_annotated_frame is not None else frame)
             
-            if frames_processed <= 2 or len(results) > 0:
-                print(f" → saved {saved_count}")
-        
+            # Periodically update progress in results_store
+            if frames_processed % 10 == 0:
+                progress_pct = int((frame_number / video_processor.total_frames) * 100)
+                results_store[job_id] = DetectionResult(
+                    job_id=job_id,
+                    status="processing",
+                    progress=progress_pct,
+                    total_detections=len(detections),
+                    video_url=f"/uploads/{job_id}_video.mp4"
+                )
+            
+        out_video.release()
         video_processor.close()
         
         # Calculate stats
@@ -118,7 +152,7 @@ def process_video_task(job_id: str, video_path: str, srt_path: str, model_name: 
             total_detections=len(detections),
             processing_time=processing_time,
             avg_confidence=avg_confidence,
-            video_url=f"/uploads/{job_id}_video.mp4"
+            video_url=f"/uploads/{out_video_filename}"
         )
         results_store[job_id] = result
         

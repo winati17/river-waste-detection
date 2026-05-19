@@ -80,7 +80,9 @@ class YOLODetector:
         if verbose:
             print(f"[DEBUG] Final detections: {len(detections)} (after confidence filter)\n")
         
-        return detections
+        annotated_frame = results[0].plot() if len(results) > 0 else frame
+        
+        return detections, annotated_frame
     
     def get_class_names(self):
         """Get list of class names that model can detect."""

@@ -81,6 +81,12 @@ def get_all_detections():
     response = supabase.table("detections").select("*").execute()
     return {"data": response.data}
 
+@app.delete("/api/detections")
+def clear_detections():
+    # Supabase delete requires a filter
+    supabase.table("detections").delete().neq("id", -1).execute()
+    return {"status": "success"}
+
 @app.get("/api/health")
 async def health_check():
     return {"status": "healthy", "message": "AI Drone Waste Detection API is running"}

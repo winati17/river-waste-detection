@@ -36,3 +36,8 @@ export const getAllDetections = async () => {
   const response = await api.get(`/api/detections`);
   return response.data;
 };
+
+export const clearDetections = async () => {
+  const response = await api.delete(`/api/detections`);
+  return response.data;
+};

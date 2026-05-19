@@ -112,7 +112,16 @@ export default function ResultsPage() {
             </div>
           ) : (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-800">
-              ⏳ Processing in progress...
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-medium">⏳ Processing in progress...</span>
+                <span>{data.progress ?? 0}%</span>
+              </div>
+              <div className="w-full bg-yellow-200 rounded-full h-2.5">
+                <div 
+                  className="bg-yellow-500 h-2.5 rounded-full transition-all duration-500" 
+                  style={{ width: `${data.progress ?? 0}%` }}
+                ></div>
+              </div>
             </div>
           )}
         </div>
@@ -209,7 +218,7 @@ export default function ResultsPage() {
               <div>
                 <h3 className="text-lg font-semibold mb-4">Video Playback</h3>
                 <VideoPlayer
-                  videoUrl={`${process.env.NEXT_PUBLIC_API_URL}${data.video_url}`}
+                  videoUrl={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${data.video_url}`}
                   onTimeUpdate={(time) => setCurrentVideoTime(time)}
                 />
               </div>

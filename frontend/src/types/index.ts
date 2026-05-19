@@ -13,6 +13,7 @@ export interface DetectionResult {
   status: string;
   detections?: Detection[];
   total_detections?: number;
+  progress?: number;
   processing_time?: number;
   avg_confidence?: number;
   error?: string;

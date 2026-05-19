@@ -2,14 +2,22 @@
 
 import Link from "next/link";
 import Map from "../../components/Map";
-import { useQuery } from "@tanstack/react-query";
-import { getAllDetections } from "../../services/api";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getAllDetections, clearDetections } from "../../services/api";
 import { Detection } from "../../types";
 
 export default function MapPage() {
+  const queryClient = useQueryClient();
   const { data, isLoading, error } = useQuery({
     queryKey: ['all-detections'],
     queryFn: getAllDetections,
+  });
+
+  const clearMutation = useMutation({
+    mutationFn: clearDetections,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['all-detections'] });
+    },
   });
 
   const detections: Detection[] = (data?.data || []).map((d: any) => ({
@@ -39,7 +47,20 @@ export default function MapPage() {
       </nav>
 
       <main className="mx-auto max-w-7xl px-6 py-12">
-        <h1 className="text-4xl font-bold mb-6">Detection Map</h1>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+          <h1 className="text-4xl font-bold">Detection Map</h1>
+          <button 
+            onClick={() => {
+              if (confirm("Are you sure you want to clear all detections from the map?")) {
+                clearMutation.mutate();
+              }
+            }}
+            disabled={clearMutation.isPending}
+            className="mt-4 sm:mt-0 px-4 py-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-lg font-medium transition-colors disabled:opacity-50"
+          >
+            {clearMutation.isPending ? 'Clearing...' : 'Reset Map'}
+          </button>
+        </div>
         <p className="mb-10 max-w-3xl text-slate-700 leading-7">
           Visualize detected trash locations and the drone path from river monitoring missions.
           The map updates as new footage is processed.
