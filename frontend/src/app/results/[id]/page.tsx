@@ -222,7 +222,7 @@ export default function ResultsPage() {
                     <h3 className="text-lg font-semibold mb-4 text-slate-800">Original Drone Footage</h3>
                     {data.original_video_url ? (
                       <VideoPlayer
-                        videoUrl={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${data.original_video_url}`}
+                        videoUrl={`${process.env.NEXT_PUBLIC_API_URL}${data.original_video_url}`}
                         onTimeUpdate={(time) => setCurrentVideoTime(time)}
                       />
                     ) : (
@@ -235,7 +235,7 @@ export default function ResultsPage() {
                     <h3 className="text-lg font-semibold mb-4 text-slate-800">AI Annotated Detections</h3>
                     {data.annotated_video_url ? (
                       <VideoPlayer
-                        videoUrl={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${data.annotated_video_url}`}
+                        videoUrl={`${process.env.NEXT_PUBLIC_API_URL}${data.annotated_video_url}`}
                         onTimeUpdate={(time) => setCurrentVideoTime(time)}
                       />
                     ) : (

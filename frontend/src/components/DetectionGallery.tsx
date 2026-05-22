@@ -40,7 +40,7 @@ export default function DetectionGallery({ detections }: GalleryProps) {
   const activeSnapshot = activeItems[0]?.snapshot || '';
   const resolvedSnapshot = activeSnapshot.startsWith('http') 
     ? activeSnapshot 
-    : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${activeSnapshot}`;
+    : `${process.env.NEXT_PUBLIC_API_URL}${activeSnapshot}`;
 
   return (
     <div className="space-y-6">
@@ -147,7 +147,7 @@ export default function DetectionGallery({ detections }: GalleryProps) {
         <div className="flex overflow-x-auto gap-3 pb-2 snap-x">
           {frames.map(({ frame, items }) => {
             const snap = items[0]?.snapshot || '';
-            const resSnap = snap.startsWith('http') ? snap : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${snap}`;
+            const resSnap = snap.startsWith('http') ? snap : `${process.env.NEXT_PUBLIC_API_URL}${snap}`;
             const isSelected = activeFrame === frame;
             
             return (
