@@ -1,7 +1,12 @@
 import axios from 'axios';
 import { DetectionResult } from '../types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+const rawBaseUrl = process.env.NEXT_PUBLIC_API_URL;
+const API_BASE_URL = rawBaseUrl
+  ? rawBaseUrl.startsWith('http://') || rawBaseUrl.startsWith('https://')
+    ? rawBaseUrl
+    : `https://${rawBaseUrl}`
+  : 'http://localhost:8000';
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
