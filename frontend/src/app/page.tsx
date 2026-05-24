@@ -33,20 +33,6 @@ export default function HomePage() {
                 <Link href="/about" className="rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100">Learn More</Link>
               </div>
             </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              {[
-                { title: "Autonomous Monitoring", text: "Capture river footage and GPS data with drone missions." },
-                { title: "AI Trash Detection", text: "Use advanced YOLO models to identify floating waste." },
-                { title: "Geospatial Insights", text: "Map detections with GPS coordinates for actionable analysis." },
-                { title: "Result Dashboard", text: "Review detection summaries, map data, and video playback." },
-              ].map((card) => (
-                <div key={card.title} className="rounded-3xl bg-white p-6 shadow-xl ring-1 ring-slate-200">
-                  <h2 className="text-xl font-semibold mb-2">{card.title}</h2>
-                  <p className="text-slate-600 leading-7">{card.text}</p>
-                </div>
-              ))}
-            </div>
           </div>
 
           <div>
@@ -61,10 +47,6 @@ export default function HomePage() {
           </div>
         </section>
       </main>
-
-      <footer className="border-t border-slate-200/70 bg-white/70 py-8 text-center text-sm text-slate-600">
-        © 2026 River Trash AI Monitoring System
-      </footer>
     </div>
   );
 }
