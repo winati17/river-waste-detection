@@ -97,6 +97,11 @@ export default function HistoryList() {
                     items
                   </p>
                 )}
+                <div className="mt-2 text-xs text-slate-500 space-y-1">
+                  {job.video_name && <p>Video: {job.video_name}</p>}
+                  {job.srt_name && <p>SRT: {job.srt_name}</p>}
+                  {job.model_name && <p>Model: {job.model_name}</p>}
+                </div>
               </div>
 
               <div className="flex items-center gap-2 w-full sm:w-auto">

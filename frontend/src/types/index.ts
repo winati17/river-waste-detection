@@ -12,6 +12,9 @@ export interface Detection {
     x2: number;
     y2: number;
   };
+  video_name?: string;
+  srt_name?: string;
+  model_name?: string;
 }
 
 export interface DetectionResult {
@@ -25,4 +28,7 @@ export interface DetectionResult {
   error?: string;
   annotated_video_url?: string;
   original_video_url?: string;
+  video_name?: string;
+  srt_name?: string;
+  model_name?: string;
 }

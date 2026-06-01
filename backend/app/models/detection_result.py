@@ -10,6 +10,9 @@ class Detection(BaseModel):
     lon: float
     snapshot: str
     bbox: Optional[dict] = None
+    video_name: Optional[str] = None
+    srt_name: Optional[str] = None
+    model_name: Optional[str] = None
 
 class DetectionResult(BaseModel):
     job_id: str
@@ -22,3 +25,6 @@ class DetectionResult(BaseModel):
     error: Optional[str] = None
     annotated_video_url: Optional[str] = None  # URL to access the video
     original_video_url: Optional[str] = None
+    video_name: Optional[str] = None
+    srt_name: Optional[str] = None
+    model_name: Optional[str] = None

@@ -44,7 +44,7 @@ def load_history():
 
 load_history()
 
-def process_video_task(job_id: str, video_path: str, srt_path: str, model_name: str, confidence: float):
+def process_video_task(job_id: str, video_path: str, srt_path: str, model_name: str, confidence: float, video_name: str, srt_name: str):
     """Background task to process video."""
     try:
         start_time = time.time()
@@ -136,7 +136,10 @@ def process_video_task(job_id: str, video_path: str, srt_path: str, model_name: 
                             lat=gps['lat'],
                             lon=gps['lon'],
                             snapshot=f"/outputs/{job_id}/{snapshot_filename}",
-                            bbox=result['bbox']
+                            bbox=result['bbox'],
+                            video_name=video_name,
+                            srt_name=srt_name,
+                            model_name=model_name,
                         )
                         detections.append(detection)
                         saved_count += 1
@@ -153,13 +156,12 @@ def process_video_task(job_id: str, video_path: str, srt_path: str, model_name: 
                     progress=progress_pct,
                     total_detections=len(detections),
                     detections=list(detections),
-                    original_video_url=f"/uploads/{job_id}_video.mp4"
+                    original_video_url=f"/uploads/{job_id}_video.mp4",
+                    video_name=video_name,
+                    srt_name=srt_name,
+                    model_name=model_name,
                 )
-            
-        out_video.release()
-        video_processor.close()
-        
-        # Calculate stats
+
         processing_time = time.time() - start_time
         avg_confidence = sum(d.confidence for d in detections) / len(detections) if detections else 0
         
@@ -181,7 +183,10 @@ def process_video_task(job_id: str, video_path: str, srt_path: str, model_name: 
             processing_time=processing_time,
             avg_confidence=avg_confidence,
             annotated_video_url=f"/uploads/{out_video_filename}",
-            original_video_url=f"/uploads/{job_id}_video.mp4"
+            original_video_url=f"/uploads/{job_id}_video.mp4",
+            video_name=video_name,
+            srt_name=srt_name,
+            model_name=model_name,
         )
         results_store[job_id] = result
         
@@ -254,13 +259,25 @@ async def process_video(
         f.write(await srt.read())
 
     # Add background task
-    background_tasks.add_task(process_video_task, job_id, video_path, srt_path, model_name, confidence)
+    background_tasks.add_task(
+        process_video_task,
+        job_id,
+        video_path,
+        srt_path,
+        model_name,
+        confidence,
+        video.filename,
+        srt.filename,
+    )
 
     # Return pending response
     result = DetectionResult(
         job_id=job_id,
         status="pending",
-        annotated_video_url=f"/uploads/{job_id}_video.mp4"
+        annotated_video_url=f"/uploads/{job_id}_video.mp4",
+        video_name=video.filename,
+        srt_name=srt.filename,
+        model_name=model_name,
     )
     results_store[job_id] = result
 

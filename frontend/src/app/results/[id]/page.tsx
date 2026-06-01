@@ -100,6 +100,11 @@ export default function ResultsPage() {
           </button>
           <h1 className="text-4xl font-bold text-gray-900">Detection Results</h1>
           <p className="text-gray-600 mt-2">Job ID: {jobId}</p>
+          <div className="mt-3 text-sm text-slate-600 space-y-1">
+            {data.video_name && <p>Video: {data.video_name}</p>}
+            {data.srt_name && <p>SRT: {data.srt_name}</p>}
+            {data.model_name && <p>Model: {data.model_name}</p>}
+          </div>
         </div>
 
         {/* Status Banner */}

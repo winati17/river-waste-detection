@@ -82,6 +82,9 @@ export default function Map({ gpsData, detections, currentTimestamp }: MapProps)
               <p><strong>${detection.class_name}</strong></p>
               <p>Confidence: ${(detection.confidence * 100).toFixed(1)}%</p>
               <p>Frame: ${detection.frame}</p>
+              <p>Video: ${detection.video_name || 'N/A'}</p>
+              <p>SRT: ${detection.srt_name || 'N/A'}</p>
+              <p>Model: ${detection.model_name || 'N/A'}</p>
               <p>Location: ${detection.lat.toFixed(4)}, ${detection.lon.toFixed(4)}</p>
               ${detection.snapshot ? `<img src="${detection.snapshot.startsWith('http') ? detection.snapshot : (process.env.NEXT_PUBLIC_API_URL) + detection.snapshot}" class="mt-2 max-w-xs" />` : ''}
             </div>`,
