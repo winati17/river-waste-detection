@@ -14,8 +14,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "River Trash AI",
-  description: "Track and detect river waste with AI-powered video and GPS analysis.",
+  title: "River Trash Detection",
 };
 
 export default function RootLayout({
