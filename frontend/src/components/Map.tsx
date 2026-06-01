@@ -38,7 +38,7 @@ export default function Map({ gpsData, detections, currentTimestamp }: MapProps)
       }).addTo(map.current);
     }
 
-    // Clear all markers and path if detections is empty (e.g. after Reset Map)
+    // Clear all markers and path if detections is empty
     if (detections.length === 0) {
       Object.values(markers.current).forEach((marker) => {
         map.current?.removeLayer(marker);

@@ -1,26 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getAllDetections, clearDetections } from "../../services/api";
+import { useQuery } from "@tanstack/react-query";
+import { getAllDetections } from "../../services/api";
 import { Detection } from "../../types";
 import dynamic from "next/dynamic";
 
 const Map = dynamic(() => import("../../components/Map"), { ssr: false });
 
 export default function MapPage() {
-  const queryClient = useQueryClient();
   const { data, isLoading, error } = useQuery({
     queryKey: ['all-detections'],
     queryFn: getAllDetections,
     refetchInterval: 5000, // Poll database every 5 seconds to keep the map updated
-  });
-
-  const clearMutation = useMutation({
-    mutationFn: clearDetections,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['all-detections'] });
-    },
   });
 
   const detections: Detection[] = (data?.data || []).map((d: any) => ({
@@ -51,17 +43,6 @@ export default function MapPage() {
       <main className="mx-auto max-w-7xl px-6 py-12">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
           <h1 className="text-4xl font-bold">Detection Map</h1>
-          <button 
-            onClick={() => {
-              if (confirm("Are you sure you want to clear all detections from the map?")) {
-                clearMutation.mutate();
-              }
-            }}
-            disabled={clearMutation.isPending}
-            className="mt-4 sm:mt-0 px-4 py-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-lg font-medium transition-colors disabled:opacity-50"
-          >
-            {clearMutation.isPending ? 'Clearing...' : 'Reset Map'}
-          </button>
         </div>
 
         <div className="rounded-3xl bg-white p-6 shadow-xl ring-1 ring-slate-200">
