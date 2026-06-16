@@ -7,7 +7,7 @@ import { uploadFiles } from "../services/api";
 export default function UploadForm() {
   const [video, setVideo] = useState<File | null>(null);
   const [srt, setSrt] = useState<File | null>(null);
-  const [modelName, setModelName] = useState("yolov8n.pt");
+  const [modelName, setModelName] = useState("yolov8s-100epoch.pt");
   const [confidence, setConfidence] = useState(0.3);
   const [loading, setLoading] = useState(false);
   const router = useRouter();

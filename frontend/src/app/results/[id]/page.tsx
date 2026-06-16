@@ -8,6 +8,7 @@ import { DetectionResult } from '../../../types';
 import VideoPlayer from '../../../components/VideoPlayer';
 import DetectionGallery from '../../../components/DetectionGallery';
 import dynamic from 'next/dynamic';
+import { BarChart3, Image, MapPin, Video, CheckCircle2, XCircle, Clock3 } from 'lucide-react';
 
 const Map = dynamic(() => import('../../../components/Map'), { ssr: false });
 
@@ -82,10 +83,10 @@ export default function ResultsPage() {
   }
 
   const tabs = [
-    { id: 'summary' as const, label: 'Summary', icon: '📊' },
-    { id: 'map' as const, label: 'Map', icon: '🗺️' },
-    { id: 'video' as const, label: 'Video', icon: '📹'},
-    { id: 'gallery' as const, label: 'Gallery', icon: '🖼️', disabled: !data.detections || data.detections.length === 0 },
+    { id: 'summary' as const, label: 'Summary', icon: <BarChart3 className="inline h-4 w-4 mr-2" /> },
+    { id: 'map' as const, label: 'Map', icon: <MapPin className="inline h-4 w-4 mr-2" /> },
+    { id: 'video' as const, label: 'Video', icon: <Video className="inline h-4 w-4 mr-2" /> },
+    { id: 'gallery' as const, label: 'Gallery', icon: <Image className="inline h-4 w-4 mr-2" />, disabled: !data.detections || data.detections.length === 0 },
   ];
 
   return (
@@ -110,17 +111,19 @@ export default function ResultsPage() {
         {/* Status Banner */}
         <div className="mb-6">
           {data.status === 'completed' ? (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-green-800">
-            ✅ Processing completed successfully!
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-green-800 flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5" />
+              <span>Processing completed successfully!</span>
             </div>
           ) : data.status === 'failed' ? (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
-            ❌ Processing failed: {data.error}
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800 flex items-center gap-2">
+              <XCircle className="h-5 w-5" />
+              <span>Processing failed: {data.error}</span>
             </div>
           ) : (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-800">
               <div className="flex items-center justify-between mb-2">
-                <span className="font-medium">⏳ Processing in progress...</span>
+                <span className="font-medium flex items-center gap-2"><Clock3 className="h-5 w-5" />Processing in progress...</span>
                 <span>{data.progress ?? 0}%</span>
               </div>
               <div className="w-full bg-yellow-200 rounded-full h-2.5">
@@ -159,23 +162,23 @@ export default function ResultsPage() {
             {activeTab === 'summary' && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4">
-                    <p className="text-sm text-gray-600 font-medium">Status</p>
-                    <p className="text-2xl font-bold text-blue-900 mt-2">{data.status}</p>
+                  <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p className="text-sm text-slate-500 font-medium">Status</p>
+                    <p className="text-2xl font-semibold text-slate-900 mt-2">{data.status}</p>
                   </div>
-                  <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4">
-                    <p className="text-sm text-gray-600 font-medium">Total Detections</p>
-                    <p className="text-2xl font-bold text-green-900 mt-2">{data.total_detections || 0}</p>
+                  <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p className="text-sm text-slate-500 font-medium">Total Detections</p>
+                    <p className="text-2xl font-semibold text-slate-900 mt-2">{data.total_detections || 0}</p>
                   </div>
-                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4">
-                    <p className="text-sm text-gray-600 font-medium">Processing Time</p>
-                    <p className="text-2xl font-bold text-purple-900 mt-2">
+                  <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p className="text-sm text-slate-500 font-medium">Processing Time</p>
+                    <p className="text-2xl font-semibold text-slate-900 mt-2">
                       {data.processing_time ? `${data.processing_time.toFixed(2)}s` : 'N/A'}
                     </p>
                   </div>
-                  <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4">
-                    <p className="text-sm text-gray-600 font-medium">Avg Confidence</p>
-                    <p className="text-2xl font-bold text-orange-900 mt-2">
+                  <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p className="text-sm text-slate-500 font-medium">Avg Confidence</p>
+                    <p className="text-2xl font-semibold text-slate-900 mt-2">
                       {data.avg_confidence ? `${(data.avg_confidence * 100).toFixed(1)}%` : 'N/A'}
                     </p>
                   </div>
