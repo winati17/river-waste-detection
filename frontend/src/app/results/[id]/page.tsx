@@ -111,11 +111,11 @@ export default function ResultsPage() {
         <div className="mb-6">
           {data.status === 'completed' ? (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-green-800">
-              ✅ Processing completed successfully!
+            ✅ Processing completed successfully!
             </div>
           ) : data.status === 'failed' ? (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
-              ❌ Processing failed: {data.error}
+            ❌ Processing failed: {data.error}
             </div>
           ) : (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-800">
@@ -180,35 +180,13 @@ export default function ResultsPage() {
                     </p>
                   </div>
                 </div>
-
-                {data.status === 'completed' && data.detections && data.detections.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4">Detection Types</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {Object.entries(
-                        data.detections.reduce(
-                          (acc, det) => {
-                            acc[det.class_name] = (acc[det.class_name] || 0) + 1;
-                            return acc;
-                          },
-                          {} as Record<string, number>
-                        )
-                      ).map(([className, count]) => (
-                        <div key={className} className="bg-gray-100 rounded-lg p-4">
-                          <p className="font-medium text-gray-900">{className}</p>
-                          <p className="text-2xl font-bold text-blue-600 mt-2">{count}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 
             {/* Map Tab */}
             {activeTab === 'map' && (
               <div>
-                <h3 className="text-lg font-semibold mb-4">Detection Map</h3>
+                <h3 className="text-lg font-semibold mb-4">Map</h3>
                 <div className="rounded-lg overflow-hidden border border-gray-200">
                   <Map
                     gpsData={gpsPath}
@@ -224,7 +202,7 @@ export default function ResultsPage() {
               <div>
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                   <div>
-                    <h3 className="text-lg font-semibold mb-4 text-slate-800">Original Drone Footage</h3>
+                    <h3 className="text-lg font-semibold mb-4 text-slate-800">Original Video</h3>
                     {data.original_video_url ? (
                       <VideoPlayer
                         videoUrl={`${process.env.NEXT_PUBLIC_API_URL}${data.original_video_url}`}
@@ -237,7 +215,7 @@ export default function ResultsPage() {
                     )}
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold mb-4 text-slate-800">AI Annotated Detections</h3>
+                    <h3 className="text-lg font-semibold mb-4 text-slate-800">Annotated Video</h3>
                     {data.annotated_video_url ? (
                       <VideoPlayer
                         videoUrl={`${process.env.NEXT_PUBLIC_API_URL}${data.annotated_video_url}`}
@@ -256,7 +234,7 @@ export default function ResultsPage() {
             {/* Gallery Tab */}
             {activeTab === 'gallery' && (
               <div>
-                <h3 className="text-lg font-semibold mb-4">Detection Gallery</h3>
+                <h3 className="text-lg font-semibold mb-4">Gallery</h3>
                 {data.detections && data.detections.length > 0 ? (
                   <DetectionGallery detections={data.detections} />
                 ) : (

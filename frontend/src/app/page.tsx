@@ -18,10 +18,7 @@ export default function HomePage() {
       <main className="mx-auto max-w-7xl px-6 py-16">
           <div>
             <div className="rounded-[2rem] bg-white/90 p-8 shadow-2xl shadow-slate-500/10 ring-1 ring-slate-200">
-              <h2 className="text-3xl font-semibold mb-4">Upload video & start detection</h2>
-              <p className="mb-6 text-slate-600">
-                Submit your MP4 river footage and GPS SRT file, then choose the model and confidence threshold.
-              </p>
+              <h2 className="text-3xl font-semibold mb-4">Start Waste Detection</h2>
               <UploadForm />
               <HistoryList />
             </div>

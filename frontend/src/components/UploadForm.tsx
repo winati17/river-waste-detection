@@ -30,10 +30,9 @@ export default function UploadForm() {
 
   return (
     <div className="rounded-3xl bg-white/90 shadow-2xl shadow-slate-200/80 p-8 ring-1 ring-slate-200">
-      <h2 className="text-2xl font-semibold mb-6">Start Waste Detection</h2>
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className="block text-sm font-medium text-slate-700">Video File (.mp4)</label>
+          <label className="block text-sm font-medium text-slate-700">Video River Footage File (.mp4)</label>
           <input
             type="file"
             accept=".mp4"
@@ -43,7 +42,7 @@ export default function UploadForm() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700">GPS SRT File</label>
+          <label className="block text-sm font-medium text-slate-700">GPS File (.srt)</label>
           <input
             type="file"
             accept=".srt"
@@ -59,8 +58,8 @@ export default function UploadForm() {
             onChange={(e) => setModelName(e.target.value)}
             className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm focus:border-blue-500 focus:outline-none"
           >
-            <option value="yolov8n.pt">YOLOv8 Nano</option>
-            <option value="yolo11n.pt">YOLO11 Nano</option>
+            <option value="yolov8s-100epoch.pt">YOLOv8</option>
+            <option value="yolo11s-200epoch.pt">YOLO11</option>
           </select>
         </div>
         <div>
