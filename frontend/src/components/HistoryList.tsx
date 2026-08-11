@@ -101,6 +101,9 @@ export default function HistoryList() {
                   {job.video_name && <p>Video: {job.video_name}</p>}
                   {job.srt_name && <p>SRT: {job.srt_name}</p>}
                   {job.model_name && <p>Model: {job.model_name}</p>}
+                  {job.confidence_threshold !== undefined && (
+                    <p>Confidence: {(job.confidence_threshold * 100).toFixed(1)}%</p>
+                  )}
                 </div>
               </div>
 

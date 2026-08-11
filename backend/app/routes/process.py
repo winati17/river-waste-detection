@@ -10,6 +10,7 @@ import os
 import json
 import time
 import asyncio
+import csv
 import cv2
 from pathlib import Path
 from dotenv import load_dotenv
@@ -62,6 +63,13 @@ def process_video_task(job_id: str, video_path: str, srt_path: str, model_name: 
         if not gps_data:
             raise ValueError("No GPS data found in SRT file")
         print(f"✅ GPS data parsed: {len(gps_data)} points, time range: {gps_data[0]['time']:.2f}s - {gps_data[-1]['time']:.2f}s")
+        print("=== Sample GPS points ===")
+        for gps_point in gps_data[:5]:
+            print(f"  time={gps_point['time']:.2f}s lat={gps_point['lat']:.6f} lon={gps_point['lon']:.6f} alt={gps_point.get('alt')}")
+        print("=========================")
+        
+        # Prepare debug samples for GPS sync reporting
+        sync_samples = []
         
         # Process video (All frames)
         video_processor = VideoProcessor(video_path, frame_skip=1)
@@ -125,6 +133,16 @@ def process_video_task(job_id: str, video_path: str, srt_path: str, model_name: 
                 for result in last_results:
                     gps = interpolate_gps(timestamp, gps_data, gps_offset)
                     if gps:
+                        sync_samples.append({
+                            'frame': frame_number,
+                            'video_time': timestamp,
+                            'gps_time': gps['time'],
+                            'lat': gps['lat'],
+                            'lon': gps['lon'],
+                            'alt': gps.get('alt'),
+                            'class_name': result['class_name'],
+                            'confidence': result['confidence']
+                        })
                         # Save annotated snapshot
                         snapshot_filename = video_processor.save_frame(annotated, output_dir)
                         
@@ -160,6 +178,7 @@ def process_video_task(job_id: str, video_path: str, srt_path: str, model_name: 
                     video_name=video_name,
                     srt_name=srt_name,
                     model_name=model_name,
+                    confidence_threshold=confidence,
                 )
 
         processing_time = time.time() - start_time
@@ -172,6 +191,29 @@ def process_video_task(job_id: str, video_path: str, srt_path: str, model_name: 
         print(f"   Detections saved (with GPS): {len(detections)}")
         print(f"   Processing time: {processing_time:.2f}s")
         print(f"   Avg confidence: {avg_confidence:.3f}")
+        
+        # Export full sync table for analysis
+        sync_csv_path = os.path.join(output_dir, "gps_sync_table.csv")
+        sync_json_path = os.path.join(output_dir, "gps_sync_table.json")
+        with open(sync_csv_path, "w", newline="", encoding="utf-8") as csv_file:
+            writer = csv.writer(csv_file)
+            writer.writerow(["frame", "video_time", "gps_time", "lat", "lon", "alt", "class_name", "confidence"])
+            for sample in sync_samples:
+                writer.writerow([
+                    sample['frame'],
+                    f"{sample['video_time']:.2f}",
+                    f"{sample['gps_time']:.2f}",
+                    f"{sample['lat']:.6f}",
+                    f"{sample['lon']:.6f}",
+                    sample.get('alt'),
+                    sample.get('class_name'),
+                    f"{sample.get('confidence', 0):.3f}"
+                ])
+        with open(sync_json_path, "w", encoding="utf-8") as json_file:
+            json.dump(sync_samples, json_file, indent=2)
+        print(f"✅ GPS sync table exported: {sync_csv_path}")
+        print(f"✅ GPS sync JSON exported: {sync_json_path}")
+        print(f"=== GPS sync row count: {len(sync_samples)} ===")
         print(f"{'='*80}\n")
         
         # Store results
@@ -187,6 +229,7 @@ def process_video_task(job_id: str, video_path: str, srt_path: str, model_name: 
             video_name=video_name,
             srt_name=srt_name,
             model_name=model_name,
+            confidence_threshold=confidence,
         )
         results_store[job_id] = result
         

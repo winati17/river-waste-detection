@@ -28,3 +28,4 @@ class DetectionResult(BaseModel):
     video_name: Optional[str] = None
     srt_name: Optional[str] = None
     model_name: Optional[str] = None
+    confidence_threshold: Optional[float] = None

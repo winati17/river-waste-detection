@@ -31,4 +31,5 @@ export interface DetectionResult {
   video_name?: string;
   srt_name?: string;
   model_name?: string;
+  confidence_threshold?: number;
 }
