@@ -24,6 +24,25 @@ app.add_middleware(
 
 app.include_router(process_router)
 
+# Optional auto-sync from disk to Supabase at startup
+AUTO_SYNC = os.getenv("AUTO_SYNC_ON_STARTUP", "false").lower() == "true"
+if AUTO_SYNC:
+    try:
+        from app.routes.process import sync_disk_to_supabase
+        import threading
+
+        def _run_sync():
+            try:
+                print("Starting background disk->Supabase sync...")
+                res = sync_disk_to_supabase()
+                print(f"Disk->Supabase sync result: {res}")
+            except Exception as e:
+                print(f"Error during startup sync: {e}")
+
+        threading.Thread(target=_run_sync, daemon=True).start()
+    except Exception as e:
+        print(f"Failed to start auto-sync thread: {e}")
+
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "app/uploads")
 OUTPUT_DIR = os.getenv("OUTPUT_DIR", "app/outputs")
 

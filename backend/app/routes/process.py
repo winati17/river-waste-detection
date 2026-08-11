@@ -14,6 +14,12 @@ import csv
 import cv2
 from pathlib import Path
 from dotenv import load_dotenv
+import datetime
+from app.services.supabase_client import (
+    health_check as supabase_health_check,
+    safe_insert_records,
+    get_existing_image_urls,
+)
 
 load_dotenv()
 
@@ -42,6 +48,55 @@ def load_history_from_disk():
                 except Exception as e:
                     print(f"Failed to load history for {item}: {e}")
     return history
+
+
+def build_detection_records_from_disk() -> list:
+    """Build Supabase-ready records from local results.json files."""
+    records = []
+    history = load_history_from_disk()
+    for job_id, result in history.items():
+        dets = result.detections or []
+        for d in dets:
+            try:
+                detected_at = datetime.datetime.fromtimestamp(d.timestamp, tz=datetime.timezone.utc).isoformat()
+            except Exception:
+                detected_at = datetime.datetime.utcnow().isoformat()
+            image_url = d.snapshot if isinstance(d.snapshot, str) else None
+            if not image_url:
+                continue
+            records.append({
+                "lat": d.lat,
+                "lng": d.lon,
+                "confidence": d.confidence,
+                "image_url": image_url,
+                "detected_at": detected_at,
+            })
+    return records
+
+
+def sync_disk_to_supabase() -> dict:
+    """Sync all detections found on disk into Supabase if missing.
+
+    Returns a dict with counts.
+    """
+    try:
+        if not supabase_health_check():
+            return {"ok": False, "reason": "supabase_unavailable"}
+
+        records = build_detection_records_from_disk()
+        if not records:
+            return {"ok": True, "inserted": 0, "skipped": 0}
+
+        existing = get_existing_image_urls()
+        to_insert = [r for r in records if r.get("image_url") not in existing]
+
+        if not to_insert:
+            return {"ok": True, "inserted": 0, "skipped": len(records)}
+
+        safe_insert_records(to_insert)
+        return {"ok": True, "inserted": len(to_insert), "skipped": len(records) - len(to_insert)}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
 
 # Load existing history from disk on startup
 results_store.update(load_history_from_disk())
@@ -351,6 +406,15 @@ async def get_results(job_id: str):
             raise HTTPException(status_code=500, detail=f"Failed to read persisted result: {e}")
 
     raise HTTPException(status_code=404, detail="Job not found")
+
+
+@router.post("/api/sync-detections")
+async def api_sync_detections():
+    """Manual endpoint to sync local disk detections to Supabase."""
+    result = sync_disk_to_supabase()
+    if not result.get("ok"):
+        raise HTTPException(status_code=500, detail=result)
+    return result
 
 @router.delete("/api/results/{job_id}")
 async def delete_result(job_id: str):
