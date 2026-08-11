@@ -8,9 +8,9 @@ export default function UploadForm() {
   const [video, setVideo] = useState<File | null>(null);
   const [srt, setSrt] = useState<File | null>(null);
   const [modelName, setModelName] = useState("yolov8s-100epoch.pt");
-  const [confidence, setConfidence] = useState(0.3);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const fixedConfidence = 0.5;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,7 +18,7 @@ export default function UploadForm() {
 
     setLoading(true);
     try {
-      const result = await uploadFiles(video, srt, modelName, confidence);
+      const result = await uploadFiles(video, srt, modelName, fixedConfidence);
       router.push(`/results/${result.job_id}`);
     } catch (error) {
       console.error("Upload failed:", error);
@@ -63,18 +63,6 @@ export default function UploadForm() {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700">
-            Confidence Threshold: {confidence}
-          </label>
-          <input
-            type="range"
-            min="0.1"
-            max="1.0"
-            step="0.1"
-            value={confidence}
-            onChange={(e) => setConfidence(parseFloat(e.target.value))}
-            className="mt-2 w-full"
-          />
         </div>
         <button
           type="submit"

@@ -105,6 +105,7 @@ export default function ResultsPage() {
             {data.video_name && <p>Video: {data.video_name}</p>}
             {data.srt_name && <p>SRT: {data.srt_name}</p>}
             {data.model_name && <p>Model: {data.model_name}</p>}
+            <p>Confidence threshold: 50%</p>
           </div>
         </div>
 

@@ -278,7 +278,7 @@ async def process_video(
     video: UploadFile = File(...),
     srt: UploadFile = File(...),
     model_name: str = Form(...),
-    confidence: float = Form(...),
+    confidence: float = Form(0.5),
     background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     # Validate inputs
