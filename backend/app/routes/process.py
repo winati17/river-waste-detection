@@ -28,22 +28,23 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 # In-memory store for jobs
 results_store = {}
 
-# Load existing history from disk
-def load_history():
+def load_history_from_disk():
+    history = {}
     if os.path.exists(OUTPUT_DIR):
         for item in os.listdir(OUTPUT_DIR):
             job_path = os.path.join(OUTPUT_DIR, item)
             results_file = os.path.join(job_path, "results.json")
             if os.path.isdir(job_path) and os.path.exists(results_file):
                 try:
-                    with open(results_file, 'r') as f:
+                    with open(results_file, 'r', encoding='utf-8') as f:
                         data = json.load(f)
-                        # Reconstruct model from dict
-                        results_store[item] = DetectionResult(**data)
+                        history[item] = DetectionResult(**data)
                 except Exception as e:
                     print(f"Failed to load history for {item}: {e}")
+    return history
 
-load_history()
+# Load existing history from disk on startup
+results_store.update(load_history_from_disk())
 
 def process_video_task(job_id: str, video_path: str, srt_path: str, model_name: str, confidence: float, video_name: str, srt_name: str):
     """Background task to process video."""
@@ -326,27 +327,38 @@ async def process_video(
 
     return result
 
-@router.get("/api/results/{job_id}", response_model=DetectionResult)
-async def get_results(job_id: str):
-    if job_id not in results_store:
-        raise HTTPException(status_code=404, detail="Job not found")
-    return results_store[job_id]
-
 @router.get("/api/results")
 async def list_results():
-    # Return all jobs sorted by newest first
-    # (Since dict is ordered by insertion in Python 3.7+, we can reverse it)
-    return {"jobs": list(results_store.values())[::-1]}
+    # Merge persisted disk history with in-memory jobs.
+    # This ensures history survives backend restarts and returns completed jobs even
+    # when the runtime memory store has been reset.
+    disk_history = load_history_from_disk()
+    merged = {**disk_history, **results_store}
+    return {"jobs": list(merged.values())[::-1]}
+
+@router.get("/api/results/{job_id}", response_model=DetectionResult)
+async def get_results(job_id: str):
+    if job_id in results_store:
+        return results_store[job_id]
+
+    results_file = os.path.join(OUTPUT_DIR, job_id, "results.json")
+    if os.path.exists(results_file):
+        try:
+            with open(results_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                return DetectionResult(**data)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to read persisted result: {e}")
+
+    raise HTTPException(status_code=404, detail="Job not found")
 
 @router.delete("/api/results/{job_id}")
 async def delete_result(job_id: str):
-    if job_id not in results_store:
-        raise HTTPException(status_code=404, detail="Job not found")
-    
-    # 1. Delete from memory
-    del results_store[job_id]
-    
-    # 2. Delete files from disk
+    # 1. Delete from memory if present
+    if job_id in results_store:
+        del results_store[job_id]
+
+    # 2. Delete files from disk if present
     import shutil
     job_output_dir = os.path.join(OUTPUT_DIR, job_id)
     if os.path.exists(job_output_dir):
@@ -354,7 +366,7 @@ async def delete_result(job_id: str):
             shutil.rmtree(job_output_dir)
         except Exception as e:
             print(f"Error removing output dir {job_output_dir}: {e}")
-            
+
     # Delete uploaded files
     for ext in ["_video.mp4", "_gps.srt", "_annotated.webm"]:
         file_path = os.path.join(UPLOAD_DIR, f"{job_id}{ext}")
@@ -363,7 +375,7 @@ async def delete_result(job_id: str):
                 os.remove(file_path)
             except Exception as e:
                 print(f"Error removing uploaded file {file_path}: {e}")
-                
+
     # 3. Delete from Supabase
     SUPABASE_URL = os.getenv("SUPABASE_URL")
     SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE")
