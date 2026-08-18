@@ -104,7 +104,6 @@ export default function ResultsPage() {
           <div className="mt-3 text-sm text-slate-600 space-y-1">
             {data.video_name && <p>Video: {data.video_name}</p>}
             {data.srt_name && <p>SRT: {data.srt_name}</p>}
-            {data.model_name && <p>Model: {data.model_name}</p>}
             <p>Confidence threshold: 50%</p>
           </div>
         </div>

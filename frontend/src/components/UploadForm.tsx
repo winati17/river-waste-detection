@@ -7,7 +7,7 @@ import { uploadFiles } from "../services/api";
 export default function UploadForm() {
   const [video, setVideo] = useState<File | null>(null);
   const [srt, setSrt] = useState<File | null>(null);
-  const [modelName, setModelName] = useState("yolov8s-100epoch.pt");
+  const fixedModelName = "yolo11s-200epoch.pt";
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const fixedConfidence = 0.5;
@@ -18,7 +18,7 @@ export default function UploadForm() {
 
     setLoading(true);
     try {
-      const result = await uploadFiles(video, srt, modelName, fixedConfidence);
+      const result = await uploadFiles(video, srt, fixedConfidence);
       router.push(`/results/${result.job_id}`);
     } catch (error) {
       console.error("Upload failed:", error);
@@ -51,17 +51,7 @@ export default function UploadForm() {
             required
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700">Model</label>
-          <select
-            value={modelName}
-            onChange={(e) => setModelName(e.target.value)}
-            className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm focus:border-blue-500 focus:outline-none"
-          >
-            <option value="yolov8s-100epoch.pt">YOLOv8</option>
-            <option value="yolo11s-200epoch.pt">YOLO11</option>
-          </select>
-        </div>
+        
         <div>
         </div>
         <button

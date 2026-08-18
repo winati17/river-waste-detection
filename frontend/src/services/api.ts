@@ -15,13 +15,11 @@ export const api = axios.create({
 export const uploadFiles = async (
   video: File,
   srt: File,
-  modelName: string,
   confidence: number
 ): Promise<DetectionResult> => {
   const formData = new FormData();
   formData.append('video', video);
   formData.append('srt', srt);
-  formData.append('model_name', modelName);
   formData.append('confidence', confidence.toString());
 
   const response = await api.post('/api/process', formData, {

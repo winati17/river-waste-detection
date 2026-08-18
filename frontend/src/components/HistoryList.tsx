@@ -100,7 +100,6 @@ export default function HistoryList() {
                 <div className="mt-2 text-xs text-slate-500 space-y-1">
                   {job.video_name && <p>Video: {job.video_name}</p>}
                   {job.srt_name && <p>SRT: {job.srt_name}</p>}
-                  {job.model_name && <p>Model: {job.model_name}</p>}
                 </div>
               </div>
 

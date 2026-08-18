@@ -27,6 +27,7 @@ router = APIRouter()
 
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "app/uploads")
 OUTPUT_DIR = os.getenv("OUTPUT_DIR", "app/outputs")
+DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "yolo11s-200epoch.pt")
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -104,6 +105,8 @@ results_store.update(load_history_from_disk())
 def process_video_task(job_id: str, video_path: str, srt_path: str, model_name: str, confidence: float, video_name: str, srt_name: str):
     """Background task to process video."""
     try:
+        # Use default model if none provided
+        model_name = model_name or DEFAULT_MODEL
         start_time = time.time()
         print(f"\n{'='*80}")
         print(f"🎬 Processing job {job_id}")
@@ -333,7 +336,7 @@ def process_video_task(job_id: str, video_path: str, srt_path: str, model_name: 
 async def process_video(
     video: UploadFile = File(...),
     srt: UploadFile = File(...),
-    model_name: str = Form(...),
+    model_name: str = Form(None),
     confidence: float = Form(0.5),
     background_tasks: BackgroundTasks = BackgroundTasks()
 ):
@@ -370,13 +373,16 @@ async def process_video(
     )
 
     # Return pending response
+    # Ensure result includes a model name (use default if not provided)
+    result_model = model_name or DEFAULT_MODEL
+
     result = DetectionResult(
         job_id=job_id,
         status="pending",
         annotated_video_url=f"/uploads/{job_id}_video.mp4",
         video_name=video.filename,
         srt_name=srt.filename,
-        model_name=model_name,
+        model_name=result_model,
     )
     results_store[job_id] = result
 
